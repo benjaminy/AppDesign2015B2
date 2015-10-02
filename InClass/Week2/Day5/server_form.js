@@ -28,7 +28,24 @@ function server_fun( req, res )
     }
     catch( exp ) {
         // console.log( "huh?", req.url.indexOf( "second_form?" ) );
-        if( req.url.indexOf( "first_form?" ) >= 0 )
+        if( req.url.indexOf( "add_student?" ) >= 0 )
+        {
+            var kvs = getFormValuesFromURL( req.url );
+            var db = new sql.Database( 'first_db.sqlite' );
+            var values = "('";
+            values += kvs['student_name'] + "',";
+            values += kvs['student_id'] + ",";
+            values += kvs['birth_year'] + ",";
+            values += kvs['birth_month'] + ",";
+            values += kvs['birth_day'] + ")";
+            console.log( values );
+            db.run( "INSERT INTO Students (Name, ID, BirthYear, BirthMonth, BirthDay) VALUES "+values,
+                    function( err ) {
+                        res.writeHead( 200 );
+                        res.end( "You added a student!!!!! " + err );
+                    } );
+        }
+        else if( req.url.indexOf( "first_form?" ) >= 0 )
         {
             var kvs = getFormValuesFromURL( req.url );
             var db = new sql.Database( 'first_db.sqlite' );
