@@ -30,8 +30,10 @@ function server_fun( req, res )
         {
             var kvs = getFormValuesFromURL( req.url );
             var db = new sql.Database( 'telluride.sqlite' );
-            // db.all( "SELECT * FROM Performers WHERE ID = "+kvs['perf_id'],
-            db.all( "SELECT * FROM Performers",
+            console.log( kvs['perf_id'] );
+            db.all( "SELECT * FROM Performers WHERE Name = ?",
+                    kvs['perf_id'],
+            // db.all( "SELECT * FROM Performers",
                     function( err, rows ) {
                         if( err )
                         {
@@ -41,10 +43,11 @@ function server_fun( req, res )
                         else
                         {
                             res.writeHead( 200 );
-                            var response_text = "<html><body><table><tbody>";
+                            var response_text = "<html><body>"+rows.length+"<table><tbody>";
                             for( var i = 0; i < rows.length; i++ )
                             {
-                                response_text += "<tr><td>" + rows[i].Name + "</td></tr>";
+                                response_text += "<tr><td>" + rows[i].Name +
+                                    "</td><td>"+rows[i].GroupSize+"</td></tr>";
                             }
                             response_text += "</tbody></table></body></html>";
                             res.end( response_text );
