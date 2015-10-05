@@ -7,7 +7,18 @@ db.all( 'SELECT Performers.Name as PerfName, * '+
             'JOIN Performers ON Performers.ID = Performances.PID '+
             'JOIN Stages ON Stages.ID = Performances.SID',
     function( err, rows ) {
-        console.log( err );
-        console.log( rows );
-        console.log( rows.length );
+        if( err !== null )
+        {
+            console.log( err );
+            return;
+        }
+        for( var i = 0; i < rows.length; i++ )
+        {
+            if( rows[i].Capacity < rows[i].GroupSize )
+            {
+                console.log( rows[i].PerfName + " is too big for " + rows[i].Name );
+            }
+        }
+        // console.log( rows );
+        // console.log( rows.length );
     } );
