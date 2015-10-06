@@ -1,18 +1,19 @@
 // Corrections:
-// 1. toString should be toString()
+// 1. toString should be toString()  (This one was an unintentional typo)
 // 2. fs library might not be installed
 // 3. filenames or j parameters could be bad
 // 4. Reading file could fail
 // 5. Line endings might be wrong
 // 6. File index could be bad
 
+// Original version:
 // var fs = require( "fs" );
-
 // function get_ith_line_of_jth_file( filenames, i, j )
 // {
 //     return fs.readFileSync( filenames[j] ).toString.split( "\n" )[ i ];
 // }
 
+// With corrections:
 function die( msg )
 {
     console.log( msg );
