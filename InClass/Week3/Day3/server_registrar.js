@@ -1,32 +1,31 @@
-var fs = require( 'fs' );
+var fs   = require( 'fs' );
 var http = require( 'http' );
-var sql = require( 'sqlite3' ).verbose();
+var sql  = require( 'sqlite3' );
 
 function getFormValuesFromURL( url )
 {
     var kvs = {};
     var parts = url.split( "?" );
-    var key_value_pairs = parts[1].split( "&" );
-    for( var i = 0; i < key_value_pairs.length; i++ )
+    if( parts.length === 2 )
     {
-        var key_value = key_value_pairs[i].split( "=" );
-        kvs[ key_value[0] ] = key_value[1];
+        var key_value_pairs = parts[1].split( "&" );
+        for( var i = 0; i < key_value_pairs.length; i++ )
+        {
+            var key_value = key_value_pairs[i].split( "=" );
+            kvs[ key_value[0] ] = key_value[1];
+        }
     }
     return kvs
 }
 
-function addStudent( req, res )
+function addSomething( req, res, db, table_name, col_name, value )
 {
-    var kvs = getFormValuesFromURL( req.url );
-    var db = new sql.Database( 'registrar.sqlite' );
-    var name = kvs[ 'name' ];
-    var sandwich = kvs[ 'sandwich' ];
-    db.run( "INSERT INTO Students(Name, SandwichPreference) VALUES ( ?, ? )", name, sandwich,
+    db.run( "INSERT INTO "+table_name+"("+col_name+") VALUES ( ? )", value,
             function( err ) {
                 if( err === null )
                 {
                     res.writeHead( 200 );
-                    res.end( "Added student" );
+                    res.end( "Added something to table: "+table_name );
                 }
                 else
                 {
@@ -37,7 +36,55 @@ function addStudent( req, res )
             } );
 }
 
-function serve_file( req, res )
+function addStudent( req, res, kvs, db )
+{
+    var name = kvs[ 'name' ];
+    var sandwich = kvs[ 'sandwich' ];
+    /* DROPPING THE SANDWICH ON THE FLOOR!!!!! */
+    addSomething( req, res, db, "Students", "Name", name );
+}
+
+function addTeacher( req, res, kvs, db )
+{
+    var name = kvs[ 'name' ];
+    addSomething( req, res, db, "Teachers", "Name", name );
+}
+
+function addClass( req, res, kvs, db )
+{
+    var name = kvs[ 'name' ];
+    addSomething( req, res, db, "Courses", "Name", name );
+}
+
+function addEnrollment( req, res, kvs, db )
+{
+    var sid_str = kvs[ 'sid' ];
+    var cid_str = kvs[ 'cid' ];
+    try {
+        var sid = parseInt( sid_str );
+        var cid = parseInt( cid_str );
+    }
+    catch( exp ) {
+        // ...
+        return;
+    }
+    db.run( "INSERT INTO Enrollments( student, class ) VALUES ( ?, ? )", sid, cid,
+            function( err ) {
+                if( err === null )
+                {
+                    res.writeHead( 200 );
+                    res.end( "Added something to table: Enrillments" );
+                }
+                else
+                {
+                    console.log( err );
+                    res.writeHead( 200 );
+                    res.end( "FAILED" );
+                }
+            } );
+}
+
+function serveFile( req, res )
 {
     var filename = "./" + req.url;
     try {
@@ -46,22 +93,52 @@ function serve_file( req, res )
         res.end( contents );
         return true;
     }
-    catch {
+    catch( exp ) {
         return false;
     }
 }
 
-function serve_dynamic( req, res )
+function addEnrollmentForm( res, req, db )
 {
+    var response_text = "<html><body><form> ...";
+
+
+    var response_text += " ...</form></body></html>";
+}
+
+function serveDynamic( req, res )
+{
+    var kvs = getFormValuesFromURL( req.url );
+    var db = new sql.Database( 'registrar.sqlite' );
     if( req.url.indexOf( "add_student?" ) >= 0 )
     {
-        addStudent( req, res );
+        addStudent( req, res, kvs, db );
+    }
+    else if( req.url.indexOf( "add_teacher?" ) >= 0 )
+    {
+        addTeacher( req, res, kvs, db );
+    }
+    else if( req.url.indexOf( "add_class?" ) >= 0 )
+    {
+        addClass( req, res, kvs, db );
+    }
+    else if( req.url.indexOf( "add_enrollment?" ) >= 0 )
+    {
+        addEnrollment( req, res, kvs, db );
+    }
+    else if( req.url.indexOf( "add_enrollment_form" ) >= 0 )
+    {
+        addEnrollmentForm( req, res, db );
+    }
+    else if( req.url.indexOf( "add_teaching_assignment?" ) >= 0 )
+    {
+        addTeachingAssignment( req, res, kvs, db );
     }
     else
     {
         // console.log( exp );
         res.writeHead( 404 );
-        res.end( "Cannot find file: "+filename );
+        res.end( "Unknown URL: "+req.url );
     }
 }
 
@@ -72,11 +149,11 @@ function server_fun( req, res )
     {
         req.url = "/index.html";
     }
-    var file_worked = serve_file( req, res );
+    var file_worked = serveFile( req, res );
     if( file_worked )
         return;
 
-    serve_dynamic( req, res );
+    serveDynamic( req, res );
 }
 
 var server = http.createServer( server_fun );
