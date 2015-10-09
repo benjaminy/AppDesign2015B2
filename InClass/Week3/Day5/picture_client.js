@@ -21,7 +21,7 @@ function pageLoaded()
         }
         the_grid.appendChild( row_elem );
     }
-    window.setTimeout( pollServer, 1000 );
+    window.setTimeout( pollServer, 100, -1 );
 }
 
 function mousePixel( evt )
@@ -39,10 +39,10 @@ function mousePixel( evt )
     }
 }
 
-function pollServer()
+function pollServer( most_recent_version )
 {
     var xhr = new XMLHttpRequest();
-    xhr.open( "get", "get_pixels", true );
+    xhr.open( "get", "get_pixels?v="+most_recent_version, true );
     xhr.addEventListener( "load", pixelResponse );
     xhr.send();
 }
@@ -50,16 +50,31 @@ function pollServer()
 function pixelResponse( evt )
 {
     var xhr = evt.target;
-    console.log( xhr.responseText );
-    var pixels = JSON.parse( xhr.responseText );
-    console.log( pixels );
-    for( var i = 0; i < GRID_HEIGHT; i++ )
+    // console.log( xhr.responseText );
+    var pixel_data = JSON.parse( xhr.responseText );
+    // console.log( pixel_data );
+    if( pixel_data.complete )
     {
-        for( var j = 0; j < GRID_WIDTH; j++ )
+        var pixels = pixel_data.pixels;
+        for( var i = 0; i < GRID_HEIGHT; i++ )
         {
-            var cell = document.getElementById( "i"+i+"j"+j );
-            cell.style.backgroundColor = pixels[i][j];
+            for( var j = 0; j < GRID_WIDTH; j++ )
+            {
+                var cell = document.getElementById( "i"+i+"j"+j );
+                cell.style.backgroundColor = pixels[i][j];
+            }
         }
     }
-    window.setTimeout( pollServer, 1000 );
+    else
+    {
+        var changes = pixel_data.changes;
+        for( var p = 0; p < changes.length; p++ )
+        {
+            var change = changes[ p ]
+            console.log( change );
+            var cell = document.getElementById( "i"+change.i+"j"+change.j );
+            cell.style.backgroundColor = p.c;
+        }
+    }
+    window.setTimeout( pollServer, 100, pixel_data.version );
 }

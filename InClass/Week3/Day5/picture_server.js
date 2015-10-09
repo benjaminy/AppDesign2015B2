@@ -5,6 +5,7 @@ var url_utils = require( './url_utils.js' );
 var GRID_HEIGHT = 100, GRID_WIDTH = 200;
 
 var pixels = [];
+var changes = [];
 
 function serveFile( req, res )
 {
@@ -29,17 +30,28 @@ function serveDynamic( req, res )
     var kvs = url_utils.getFormValuesFromURL( req.url );
     if( req.url.indexOf( "set_pixel?" ) >= 0 )
     {
-        var i = parseInt( kvs.i );
-        var j = parseInt( kvs.j );
-        pixels[ i ][ j ] = kvs.c;
+        kvs.i = parseInt( kvs.i );
+        kvs.j = parseInt( kvs.j );
+        pixels[ kvs.i ][ kvs.j ] = kvs.c;
+        changes.push( kvs );
         res.writeHead( 200 );
         res.end( "" );
-        console.log( "Set pixel ("+i+","+j+") to "+kvs.c );
+        console.log( "Set pixel ("+kvs.i+","+kvs.j+") to "+kvs.c );
     }
-    else if( req.url.indexOf( "get_pixels" ) >= 0 )
+    else if( req.url.indexOf( "get_pixels?" ) >= 0 )
     {
+        var v = parseInt( kvs.v );
+        if( v > -1 && v < changes.length )
+        {
+            response_obj = { complete:false, changes:changes.splice( v ) };
+        }
+        else
+        {
+            response_obj = { complete:true, pixels:pixels };
+        }
+        response_obj.version = changes.length;
         res.writeHead( 200 );
-        res.end( JSON.stringify( pixels ) );
+        res.end( JSON.stringify( response_obj ) );
     }
     else
     {
@@ -66,7 +78,7 @@ function init()
         pixels.push( row );
         for( var j = 0; j < GRID_WIDTH; j++ )
         {
-            row.push( "white" );
+            row.push( "FFFFFF" );
         }
     }
 

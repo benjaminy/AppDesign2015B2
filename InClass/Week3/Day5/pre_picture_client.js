@@ -14,6 +14,7 @@ function pageLoaded()
             var cell_elem = document.createElement( 'td' );
             cell_elem.i_idx = i;
             cell_elem.j_idx = j;
+            cell_elem.id = "i"+i+"j"+j;
             cell_elem.addEventListener( "mouseenter", mousePixel );
             row_elem.appendChild( cell_elem );
         }
@@ -47,16 +48,15 @@ function pollServer( most_recent_version )
 function receivedPixels( evt )
 {
     var xhr = evt.target;
-    pixel_data = json.parse( xhr.responseText );
+    pixel_data = JSON.parse( xhr.responseText );
     if( pixel_data.complete )
     {
         var d = pixel_data.pixels;
         for( var i = 0; i < GRID_HEIGHT; i++ )
         {
-            var row_elem = the_grid.childNodes[ i ];
             for( var j = 0; j < GRID_WIDTH; j++ )
             {
-                var cell_elem = row_elem.childNodes[ j ];
+                var cell_elem = document.getElementById( "i"+i+"j"+j );
                 cell_elem.style.backgroundColor = d[i][j];
             }
         }

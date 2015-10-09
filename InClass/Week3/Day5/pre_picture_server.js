@@ -1,6 +1,6 @@
 var fs        = require( 'fs' );
 var http      = require( 'http' );
-var json      = require( 'json' );
+// var json      = require( 'json' );
 var url_utils = require( './url_utils.js' );
 
 var GRID_WIDTH = 200, GRID_HEIGHT = 100;
@@ -47,8 +47,9 @@ function serveDynamic( req, res )
         {
             var response_obj = { complete: true, pixels: pixels };
         }
+        response_obj.version = updates.length;
         res.writeHead( 200 );
-        res.end( json.stringify( response_obj ) );
+        res.end( JSON.stringify( response_obj ) );
     }
     else
     {
